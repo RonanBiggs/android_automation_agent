@@ -1,0 +1,3 @@
+1. change vision model to give bounding boxes for tapping aswell as center/suggested tap, use coordinates to ensure the center given is correct as a sanity check otherwise try again.
+2. use the adb view .xml to find clickable areas when possible
+3. use adb to complete tasks instead of tapping when possible, i.e. opening apps and such.
