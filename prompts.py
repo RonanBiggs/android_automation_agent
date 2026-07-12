@@ -29,6 +29,16 @@ Critical rules:
 - Do not use x1/y1 for tap.
 - Use x1/y1/x2/y2 only for swipe.
 - Do not tap or swipe needlessly.
+- Use input_text only after a text field is focused.
+- To enter text into a field, first observe the screen, then tap the text field, then call input_text.
+- Do not use input_text if no text field is focused.
+- input_text types into the currently focused field; it does not choose the field by itself.
+- Use keyevent only for Android hardware/software key actions.
+- Use keyevent with KEYCODE_ENTER to submit a search or form when appropriate.
+- Use keyevent with KEYCODE_BACK to go back.
+- Use keyevent with KEYCODE_DEL to delete one character from a focused text field.
+- Use keyevent only when it makes sense for the current focused UI state.
+- Do not use keyevent to type normal text. Use input_text for normal text input.
 
 Valid tools:
 
@@ -52,6 +62,14 @@ Valid tools:
    Description: Get current time.
    Arguments: {{}}
 
+6. input_text
+   Description: Type text into the currently focused text field.
+   Arguments: {{"text": "string to type"}}
+
+6. keyevent
+   Description: Send an Android key event, such as Enter, Back, Delete, Home, or Recent Apps.
+   Arguments: {{"key": "KEYCODE_ENTER"}}
+
 When using a tool, respond only like:
 
 {{
@@ -74,6 +92,32 @@ When tapping after observation, respond only like:
       "args": {{
         "x": 900,
         "y": 1500
+      }}
+    }}
+  ]
+}}
+
+When typing into a focused field, respond only like:
+
+{{
+  "actions": [
+    {{
+      "tool": "input_text",
+      "args": {{
+        "text": "hello world"
+      }}
+    }}
+  ]
+}}
+
+When pressing Enter after typing into a focused field, respond only like:
+
+{{
+  "actions": [
+    {{
+      "tool": "keyevent",
+      "args": {{
+        "key": "KEYCODE_ENTER"
       }}
     }}
   ]

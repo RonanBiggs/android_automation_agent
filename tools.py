@@ -85,7 +85,59 @@ def clamp_int(value: Any, low: int, high: int) -> int:
     value = int(value)
     return max(low, min(high, value))
 
+def adb_escape_text(text: str) -> str:
+    """
+    Escape text for: adb shell input text ...
+    
+    Android input text has awkward escaping:
+    - spaces should usually be %s
+    - some shell-sensitive characters need escaping
+    """
+    replacements = {
+        " ": "%s",
+        "&": r"\&",
+        "|": r"\|",
+        "<": r"\<",
+        ">": r"\>",
+        ";": r"\;",
+        "(": r"\(",
+        ")": r"\)",
+        "'": r"\'",
+        '"': r'\"',
+        "\\": r"\\",
+    }
 
+    escaped = ""
+
+    for char in text:
+        escaped += replacements.get(char, char)
+
+    return escaped
+
+
+def tool_input_text(args: dict[str, Any]) -> str:
+    if not isinstance(args, dict):
+        return 'Input text failed: args must be {"text": "string"}.'
+
+    if "text" not in args:
+        return 'Input text failed: missing required field "text".'
+
+    text = str(args["text"])
+
+    if text == "":
+        return "Input text failed: text was empty."
+
+    escaped_text = adb_escape_text(text)
+
+    result = adb_cmd(
+        ["shell", "input", "text", escaped_text],
+        timeout=15,
+    )
+
+    if result.returncode != 0:
+        return f"Input text failed: {result.stderr.strip()}"
+
+    return f"Input text complete: {text!r}"
 def take_screenshot() -> str:
     os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
@@ -481,6 +533,24 @@ def tool_swipe(args: dict[str, Any]) -> str:
 
     return f"Swipe complete: ({x1}, {y1}) -> ({x2}, {y2})"
 
+def tool_keyevent(args: dict[str, Any]) -> str:
+    if not isinstance(args, dict):
+        return 'Keyevent failed: args must be {"key": "KEYCODE_NAME_OR_NUMBER"}.'
+
+    if "key" not in args:
+        return 'Keyevent failed: missing "key".'
+
+    key = str(args["key"])
+
+    result = adb_cmd(
+        ["shell", "input", "keyevent", key],
+        timeout=10,
+    )
+
+    if result.returncode != 0:
+        return f"Keyevent failed: {result.stderr.strip()}"
+
+    return f"Keyevent complete: {key}"
 
 def tool_observe_screen(args: dict[str, Any]) -> str:
     request = str(args.get("request", "")).strip() or "Find the requested target"
@@ -572,4 +642,6 @@ TOOLS: dict[str, Callable[[dict[str, Any]], str]] = {
     "tap": tool_tap,
     "swipe": tool_swipe,
     "observe_screen": tool_observe_screen,
+    "input_text": tool_input_text,
+    "keyevent": tool_keyevent,
 }

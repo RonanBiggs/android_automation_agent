@@ -56,6 +56,48 @@ def validate_actions_or_feedback(actions: Any) -> tuple[bool, str]:
         if not isinstance(args, dict):
             return False, f"Invalid args for {tool_name}. args must be an object."
 
+        if tool_name == "keyevent":
+            if "key" not in args:
+                return False, 'Invalid keyevent. Use {"key": "KEYCODE_ENTER"}.'
+
+            if not isinstance(args["key"], str):
+                return False, "Invalid keyevent. key must be a string."
+
+            allowed_keys = {
+                "KEYCODE_ENTER",
+                "KEYCODE_BACK",
+                "KEYCODE_DEL",
+                "KEYCODE_FORWARD_DEL",
+                "KEYCODE_HOME",
+                "KEYCODE_APP_SWITCH",
+                "KEYCODE_TAB",
+                "KEYCODE_ESCAPE",
+                "KEYCODE_DPAD_UP",
+                "KEYCODE_DPAD_DOWN",
+                "KEYCODE_DPAD_LEFT",
+                "KEYCODE_DPAD_RIGHT",
+                "KEYCODE_DPAD_CENTER",
+                "KEYCODE_MOVE_END",
+                "KEYCODE_MOVE_HOME",
+                "KEYCODE_CLEAR",
+            }
+
+            if args["key"] not in allowed_keys:
+                return False, (
+                    f"Invalid keyevent. Unsupported key {args['key']!r}. "
+                    f"Allowed keys are: {sorted(allowed_keys)}"
+                )
+
+    if tool_name == "input_text":
+        if "text" not in args:
+            return False, 'Invalid input_text. Use {"text": "string to type"}.'
+
+        if not isinstance(args["text"], str):
+            return False, "Invalid input_text. text must be a string."
+
+        if args["text"] == "":
+            return False, "Invalid input_text. text must not be empty."    
+
     uses_observe = any(action.get("tool") == "observe_screen" for action in actions)
 
     if uses_observe and len(actions) > 1:
